@@ -10,11 +10,11 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.SteamApi;
 using Lumina.Excel.GeneratedSheets2;
-using SamplePlugin.Timeline;
-using SamplePlugin.Windows;
+using XivSteamTimeline.Timeline;
+using XivSteamTimeline.Windows;
 using Steamworks;
 
-namespace SamplePlugin;
+namespace XivSteamTimeline;
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -22,7 +22,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public Configuration Configuration { get; init; }
 
-    public readonly WindowSystem WindowSystem = new("SamplePlugin");
+    public readonly WindowSystem WindowSystem = new("XivSteamTimeline");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
@@ -115,8 +115,6 @@ public sealed class Plugin : IDalamudPlugin
         {
             unsafe
             {
-                var inst = GameMain.Instance();
-
                 Steamworks.SteamTimeline.AddTimelineEvent("Test Description", "steam_attack", "Test Title 2", 1, -20f,
                                                           5,
                                                           ETimelineEventClipPriority

@@ -1,8 +1,8 @@
 {
-    "Author": "your name here",
-    "Name": "Sample Plugin",
-    "Punchline": "A short one-liner that shows up in /xlplugins.",
-    "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
+    "Author": "Hirtol",
+    "Name": "Steam Timeline Support",
+    "Punchline": "Adds Steam gamerecording timeline markers for in game events",
+    "Description": "Adds Steam gamerecording timeline markers for in game events",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 10,
     "RepoUrl": "https://github.com/Hirtol/xiv-steam-timeline",

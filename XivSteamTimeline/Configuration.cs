@@ -2,7 +2,7 @@
 using Dalamud.Plugin;
 using System;
 
-namespace SamplePlugin;
+namespace XivSteamTimeline;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
@@ -12,8 +12,7 @@ public class Configuration : IPluginConfiguration
     public bool IsConfigWindowMovable { get; set; } = true;
     public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
 
-    public TimelineConfigEvent CombatStart { get; set; } =
-        new TimelineConfigEvent("Combat Start", "steam_attack", true, 1);
+    public TimelineConfigEvent CombatStart { get; set; } = new("Combat Start", "steam_attack", true, 1);
 
     public sealed class TimelineConfigEvent
     {

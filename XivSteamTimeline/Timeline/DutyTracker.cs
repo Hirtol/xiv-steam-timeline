@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SamplePlugin.Timeline;
+namespace XivSteamTimeline.Timeline;
 
 public class DutyTracker
 {

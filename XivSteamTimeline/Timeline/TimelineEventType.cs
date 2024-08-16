@@ -1,4 +1,4 @@
-﻿namespace SamplePlugin.Timeline;
+﻿namespace XivSteamTimeline.Timeline;
 
 public enum TimelineEventType
 {

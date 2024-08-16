@@ -6,7 +6,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
-namespace SamplePlugin;
+namespace XivSteamTimeline;
 
 public sealed class Service
 {
