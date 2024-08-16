@@ -16,4 +16,10 @@
       <Visible>false</Visible>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Steamworks.NET">
+      <HintPath>..\Steamworks.NET\Standalone\bin\x64\Windows\netstandard2.1\Steamworks.NET.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
