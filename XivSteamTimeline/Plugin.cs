@@ -131,8 +131,8 @@ public sealed class Plugin : IDalamudPlugin
                 var ev = Service.Config.CombatStart;
                 if (ev.Enabled)
                 {
-                    SteamTimeline.AddTimelineEvent("Combat Started", ev.TimelineIcon, ev.Name, ev.Priority, 0, 0,
-                                                   ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                    AddTimelineItem(ev.TimelineIcon, ev.Name, "Combat Started", ev.Priority, 0, 0,
+                                    ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
                 }
 
                 break;
@@ -141,30 +141,30 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case TimelineEventType.DutyWipe:
                 float wipeSecondsPassed = (float)DutyTracker.Instance.EndPull();
-                SteamTimeline.AddTimelineEvent("Full party wipe", "steam_x", "Wipe", 2, 0, 0,
-                                               ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
-                SteamTimeline.AddTimelineEvent("Pull start", "steam_bolt", "Pulled", 3, -wipeSecondsPassed,
-                                               wipeSecondsPassed + 5,
-                                               ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
+                AddTimelineItem("steam_checkmark", "Wipe", "Full party wipe", 2, 0, 0,
+                                ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -wipeSecondsPassed,
+                                wipeSecondsPassed + 5,
+                                ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
                 break;
             case TimelineEventType.DutyCompleted:
                 float secondsInThePastStart = (float)DutyTracker.Instance.EndPull();
-                SteamTimeline.AddTimelineEvent("Killed the boss", "steam_checkmark", "Finish Duty", 2, 0, 0,
-                                               ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
-                SteamTimeline.AddTimelineEvent("Pull start", "steam_bolt", "Pulled", 3, -secondsInThePastStart,
-                                               secondsInThePastStart + 5,
-                                               ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
+                AddTimelineItem("steam_checkmark", "Finish Duty", "Killed the boss", 2, 0, 0,
+                                ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -secondsInThePastStart,
+                                secondsInThePastStart + 5,
+                                ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
                 break;
             case TimelineEventType.DutyEnd:
                 DutyTracker.Instance.EndDuty();
-                SteamTimeline.AddTimelineEvent("End of duty", "steam_minus", "End Duty", 1, 0, 0,
-                                               ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                AddTimelineItem("steam_minus", "End Duty", "End of duty", 1, 0, 0,
+                                ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
                 break;
             case TimelineEventType.LoadingStart:
-                SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_LoadingScreen);
+                // SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_LoadingScreen);
                 break;
             case TimelineEventType.LoadingEnd:
-                SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_Playing);
+                // SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_Playing);
                 break;
             default:
                 break;
@@ -190,7 +190,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
-        Service.ChatGui.Print($"Condition change: {flag}={value}");
+        // Service.ChatGui.Print($"Condition change: {flag}={value}");
 
         switch (flag)
         {
@@ -219,6 +219,15 @@ public sealed class Plugin : IDalamudPlugin
     private void OnDutyComplete(object? sender, ushort dutyId)
     {
         OnTimelineEvent(TimelineEventType.DutyCompleted);
+    }
+
+    private void AddTimelineItem(
+        string icon, string title, string description, uint priority, float startSecondsOffset, float duration,
+        ETimelineEventClipPriority possibleClip)
+    {
+        SteamTimeline.AddTimelineEvent(description, icon, title, priority, startSecondsOffset,
+                                       duration,
+                                       possibleClip);
     }
 
     public void ToggleConfigUI() => ConfigWindow.Toggle();
