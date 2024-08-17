@@ -9,7 +9,7 @@ public class DutyTracker
     public uint CurrentDuty { get; private set; }
     public DateTime? DutyStartTime { get; private set; }
     public DateTime? PullStartTime { get; private set; }
-    
+
     private DutyTracker()
     {
         CurrentDuty = 0;
@@ -17,8 +17,11 @@ public class DutyTracker
 
     public void SetCurrentDuty(uint duty)
     {
-        CurrentDuty = duty;
-        DutyStartTime = DateTime.Now;
+        if (CurrentDuty != duty)
+        {
+            CurrentDuty = duty;
+            DutyStartTime = DateTime.Now;
+        }
     }
 
     public void StartNewPull()
@@ -34,7 +37,7 @@ public class DutyTracker
     {
         var elapsedSeconds = DateTime.Now - PullStartTime;
         PullStartTime = null;
-        
+
         return elapsedSeconds?.TotalSeconds ?? 0.0;
     }
 
@@ -43,7 +46,7 @@ public class DutyTracker
         var elapsedSeconds = DateTime.Now - DutyStartTime;
         DutyStartTime = null;
         CurrentDuty = 0;
-        
+
         return elapsedSeconds?.TotalSeconds ?? 0.0;
     }
 }
