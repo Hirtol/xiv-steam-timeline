@@ -3,10 +3,14 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.IO;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Party;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.SteamApi;
 using Lumina.Excel.GeneratedSheets2;
@@ -136,6 +140,10 @@ public sealed class Plugin : IDalamudPlugin
                 }
 
                 break;
+            case TimelineEventType.PlayerUnconscious:
+                AddTimelineItem("steam_death", "Death", "You died", 1, 0, 0,
+                                ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                break;
             case TimelineEventType.DutyStart:
                 DutyTracker.Instance.StartNewPull();
                 break;
@@ -199,6 +207,13 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case ConditionFlag.BetweenAreas:
                 OnTimelineEvent(value ? TimelineEventType.LoadingStart : TimelineEventType.LoadingEnd);
+                break;
+            case ConditionFlag.Unconscious:
+                if (value)
+                {
+                    OnTimelineEvent(TimelineEventType.PlayerUnconscious);
+                }
+
                 break;
             default:
                 break;

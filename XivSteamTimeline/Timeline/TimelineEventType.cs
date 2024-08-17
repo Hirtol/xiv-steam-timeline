@@ -8,6 +8,8 @@ public enum TimelineEventType
     LoadingStart,
     LoadingEnd,
     
+    PlayerUnconscious,
+    
     DutyStart,
     DutyEnd,
     DutyWipe,
