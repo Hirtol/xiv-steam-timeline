@@ -193,7 +193,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnLogin()
     {
-        OnTimelineEvent(TimelineEventType.LoadingEnd);
+        SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_Playing);
     }
 
     private void OnConditionChanged(ConditionFlag flag, bool value)
