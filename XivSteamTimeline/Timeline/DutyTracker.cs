@@ -7,8 +7,8 @@ public class DutyTracker
     public static DutyTracker Instance { get; private set; } = new DutyTracker();
 
     public uint CurrentDuty { get; private set; }
-    public DateTime? DutyStartTime { get; private set; }
-    public DateTime? PullStartTime { get; private set; }
+    public Instant? DutyStart { get; private set; }
+    public Instant? PullStart { get; private set; }
 
     private DutyTracker()
     {
@@ -20,13 +20,14 @@ public class DutyTracker
         if (CurrentDuty != duty)
         {
             CurrentDuty = duty;
-            DutyStartTime = DateTime.Now;
+            DutyStart = Instant.Now;
+            Service.ChatGui.Print($"Started new duty {duty}");
         }
     }
 
     public void StartNewPull()
     {
-        PullStartTime = DateTime.Now;
+        PullStart = Instant.Now;
     }
 
     /// <summary>
@@ -35,16 +36,14 @@ public class DutyTracker
     /// <returns></returns>
     public double EndPull()
     {
-        var elapsedSeconds = DateTime.Now - PullStartTime;
-        PullStartTime = null;
+        var elapsedSeconds = PullStart?.Refresh();
 
         return elapsedSeconds?.TotalSeconds ?? 0.0;
     }
 
     public double EndDuty()
     {
-        var elapsedSeconds = DateTime.Now - DutyStartTime;
-        DutyStartTime = null;
+        var elapsedSeconds = DutyStart?.Refresh();
         CurrentDuty = 0;
 
         return elapsedSeconds?.TotalSeconds ?? 0.0;

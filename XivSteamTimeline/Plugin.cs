@@ -57,10 +57,10 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
 
-        Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-        {
-            HelpMessage = "A useful message to display in /xlhelp"
-        });
+        // Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        // {
+        //     HelpMessage = "A useful message to display in /xlhelp"
+        // });
 
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
 
@@ -77,6 +77,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.DutyState.DutyStarted += OnDutyStart;
         Service.DutyState.DutyWiped += OnDutyWipe;
         Service.DutyState.DutyCompleted += OnDutyComplete;
+        CombatTracker.Initialise();
 
 
         if (Service.ClientState.IsLoggedIn)
@@ -101,6 +102,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.DutyState.DutyStarted -= OnDutyStart;
         Service.DutyState.DutyWiped -= OnDutyWipe;
         Service.DutyState.DutyCompleted -= OnDutyComplete;
+        CombatTracker.Destroy();
 
         WindowSystem.RemoveAllWindows();
 
@@ -110,22 +112,22 @@ public sealed class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
-    private void OnCommand(string command, string args)
-    {
-        // in response to the slash command, just toggle the display status of our main ui
-        ToggleMainUI();
-
-        if (SteamAPI.IsSteamRunning())
-        {
-            unsafe
-            {
-                Steamworks.SteamTimeline.AddTimelineEvent("Test Description", "steam_attack", "Test Title 2", 1, -20f,
-                                                          5,
-                                                          ETimelineEventClipPriority
-                                                              .k_ETimelineEventClipPriority_Featured);
-            }
-        }
-    }
+    // private void OnCommand(string command, string args)
+    // {
+    //     // in response to the slash command, just toggle the display status of our main ui
+    //     ToggleMainUI();
+    //
+    //     if (SteamAPI.IsSteamRunning())
+    //     {
+    //         unsafe
+    //         {
+    //             Steamworks.SteamTimeline.AddTimelineEvent("Test Description", "steam_attack", "Test Title 2", 1, -20f,
+    //                                                       5,
+    //                                                       ETimelineEventClipPriority
+    //                                                           .k_ETimelineEventClipPriority_Featured);
+    //         }
+    //     }
+    // }
 
     public void OnTimelineEvent(TimelineEventType eType)
     {
@@ -137,6 +139,7 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     AddTimelineItem(ev.TimelineIcon, ev.Name, "Combat Started", ev.Priority, 0, 0,
                                     ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                    DutyTracker.Instance.StartNewPull();
                 }
 
                 break;
@@ -149,7 +152,8 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case TimelineEventType.DutyWipe:
                 float wipeSecondsPassed = (float)DutyTracker.Instance.EndPull();
-                AddTimelineItem("steam_checkmark", "Wipe", "Full party wipe", 2, 0, 0,
+                
+                AddTimelineItem("steam_invalid", "Wipe", "Full party wipe", 2, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
                 AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -wipeSecondsPassed,
                                 wipeSecondsPassed + 5,
@@ -199,7 +203,6 @@ public sealed class Plugin : IDalamudPlugin
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
         // Service.ChatGui.Print($"Condition change: {flag}={value}");
-
         switch (flag)
         {
             case ConditionFlag.InCombat:
@@ -222,17 +225,21 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnDutyStart(object? sender, ushort dutyId)
     {
+        Service.ChatGui.Print("EVENT: Duty start");
         DutyTracker.Instance.SetCurrentDuty(dutyId);
         OnTimelineEvent(TimelineEventType.DutyStart);
     }
 
     private void OnDutyWipe(object? sender, ushort dutyId)
     {
+        Service.ChatGui.Print("EVENT: Duty wipe");
+        DutyTracker.Instance.SetCurrentDuty(dutyId);
         OnTimelineEvent(TimelineEventType.DutyWipe);
     }
 
     private void OnDutyComplete(object? sender, ushort dutyId)
     {
+        Service.ChatGui.Print("EVENT: Duty complete");
         OnTimelineEvent(TimelineEventType.DutyCompleted);
     }
 
