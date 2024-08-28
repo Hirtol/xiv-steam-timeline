@@ -74,6 +74,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.DutyState.DutyStarted += OnDutyStart;
         Service.DutyState.DutyWiped += OnDutyWipe;
         Service.DutyState.DutyCompleted += OnDutyComplete;
+        Service.DutyState.DutyRecommenced += OnDutyRecommence;
         CombatTracker.Initialise();
         CombatTracker.OnCombatEnd += OnCombatEnd;
 
@@ -100,6 +101,8 @@ public sealed class Plugin : IDalamudPlugin
         Service.DutyState.DutyStarted -= OnDutyStart;
         Service.DutyState.DutyWiped -= OnDutyWipe;
         Service.DutyState.DutyCompleted -= OnDutyComplete;
+        Service.DutyState.DutyRecommenced -= OnDutyRecommence;
+        CombatTracker.OnCombatEnd -= OnCombatEnd;
         CombatTracker.Destroy();
 
         WindowSystem.RemoveAllWindows();
@@ -114,9 +117,6 @@ public sealed class Plugin : IDalamudPlugin
     {
         switch (eType)
         {
-            case TimelineEventType.CombatStart:
-                DutyTracker.Instance.StartNewPull();
-                break;
             case TimelineEventType.PlayerUnconscious:
                 AddTimelineItem("steam_death", "Death", "You died", 1, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
@@ -124,29 +124,34 @@ public sealed class Plugin : IDalamudPlugin
             case TimelineEventType.DutyStart:
                 DutyTracker.Instance.StartNewPull();
                 break;
+            case TimelineEventType.DutyRecommence:
+                DutyTracker.Instance.StartNewPull();
+                break;
             case TimelineEventType.DutyWipe:
-                float wipeSecondsPassed = (float)DutyTracker.Instance.EndPull();
-                Service.ChatGui.Print($"Wipe pull which lasted: {wipeSecondsPassed}s");
-                AddTimelineItem("steam_invalid", "Wipe", "Full party wipe", 2, 0, 0,
+                var wipeSecondsPassed = (float)DutyTracker.Instance.EndPull();
+                
+                AddTimelineItem("steam_invalid", "Full Party Wipe", DutyTracker.Instance.CurrentDutyName, 2, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
-                AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -wipeSecondsPassed,
+                AddTimelineItem("steam_bolt", "Pulled", $"Pull in {DutyTracker.Instance.CurrentDutyName}", 3, -wipeSecondsPassed,
                                 wipeSecondsPassed + 5,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
                 break;
             case TimelineEventType.DutyCompleted:
-                float secondsInThePastStart = (float)DutyTracker.Instance.EndPull();
-                Service.ChatGui.Print($"Completed pull which lasted: {secondsInThePastStart:.2}s");
-                AddTimelineItem("steam_checkmark", "Finish Duty", "Killed the boss", 2, 0, 0,
+                var dutyNameComplete = DutyTracker.Instance.CurrentDutyName;
+                var secondsInThePastStart = (float)DutyTracker.Instance.EndPull();
+                
+                AddTimelineItem("steam_checkmark", "Finish Duty", $"Killed the boss in {dutyNameComplete}", 2, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
-                AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -secondsInThePastStart,
+                AddTimelineItem("steam_bolt", "Pulled", $"Pull in {dutyNameComplete}", 3, -secondsInThePastStart,
                                 secondsInThePastStart + 5,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
                 break;
             case TimelineEventType.DutyEnd:
-                float dutyTotalElapsed = (float)DutyTracker.Instance.EndDuty();
-                AddTimelineItem("steam_minus", "End Duty", "End of duty", 1, 0, 0,
+                var dutyNameEnd = DutyTracker.Instance.CurrentDutyName;
+                var dutyTotalElapsed = (float)DutyTracker.Instance.EndDuty();
+                AddTimelineItem("steam_minus", "End Duty", dutyNameEnd, 1, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
-                AddTimelineItem("steam_timer", "Duty Started", "Started a new duty", 2, -dutyTotalElapsed,
+                AddTimelineItem("steam_timer", "Duty Started", $"Started {dutyNameEnd}", 2, -dutyTotalElapsed,
                                 dutyTotalElapsed, ETimelineEventClipPriority.k_ETimelineEventClipPriority_Standard);
                 break;
             case TimelineEventType.LoadingStart:
@@ -194,8 +199,6 @@ public sealed class Plugin : IDalamudPlugin
                 }
 
                 break;
-            default:
-                break;
         }
     }
 
@@ -212,21 +215,24 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnDutyStart(object? sender, ushort dutyId)
     {
-        Service.ChatGui.Print("EVENT: Duty start");
         DutyTracker.Instance.SetCurrentDuty(dutyId);
         OnTimelineEvent(TimelineEventType.DutyStart);
+    }
+    
+    private void OnDutyRecommence(object? sender, ushort dutyId)
+    {
+        DutyTracker.Instance.SetCurrentDuty(dutyId);
+        OnTimelineEvent(TimelineEventType.DutyRecommence);
     }
 
     private void OnDutyWipe(object? sender, ushort dutyId)
     {
-        Service.ChatGui.Print("EVENT: Duty wipe");
         DutyTracker.Instance.SetCurrentDuty(dutyId);
         OnTimelineEvent(TimelineEventType.DutyWipe);
     }
 
     private void OnDutyComplete(object? sender, ushort dutyId)
     {
-        Service.ChatGui.Print("EVENT: Duty complete");
         OnTimelineEvent(TimelineEventType.DutyCompleted);
     }
 

@@ -11,6 +11,7 @@ public enum TimelineEventType
     PlayerUnconscious,
     
     DutyStart,
+    DutyRecommence,
     DutyEnd,
     DutyWipe,
     DutyCompleted,

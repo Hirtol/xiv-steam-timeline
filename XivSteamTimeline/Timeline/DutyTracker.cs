@@ -1,4 +1,5 @@
 ﻿using System;
+using Lumina.Excel.GeneratedSheets;
 
 namespace XivSteamTimeline.Timeline;
 
@@ -7,6 +8,7 @@ public class DutyTracker
     public static DutyTracker Instance { get; private set; } = new DutyTracker();
 
     public uint CurrentDuty { get; private set; }
+    public string CurrentDutyName => Service.LuminaRow<TerritoryType>(CurrentDuty)?.PlaceName?.Value?.Name?.ToString() ?? "UNKNOWN";
     public Instant? DutyStart { get; private set; }
     public Instant? PullStart { get; private set; }
 
@@ -21,13 +23,11 @@ public class DutyTracker
         {
             CurrentDuty = duty;
             DutyStart = Instant.Now;
-            Service.ChatGui.Print($"Started new duty {duty}");
         }
     }
 
     public void StartNewPull()
     {
-        Service.ChatGui.Print("Start new pull");
         PullStart = Instant.Now;
     }
 
