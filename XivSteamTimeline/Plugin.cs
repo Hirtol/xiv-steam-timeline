@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.Command;
+﻿using System;
+using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.IO;
@@ -12,6 +13,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.SteamApi;
 using Lumina.Excel.GeneratedSheets2;
 using XivSteamTimeline.Timeline;
@@ -57,11 +59,6 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
 
-        // Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-        // {
-        //     HelpMessage = "A useful message to display in /xlhelp"
-        // });
-
         Service.PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
 
         // This adds a button to the plugin installer entry of this plugin which allows
@@ -78,6 +75,7 @@ public sealed class Plugin : IDalamudPlugin
         Service.DutyState.DutyWiped += OnDutyWipe;
         Service.DutyState.DutyCompleted += OnDutyComplete;
         CombatTracker.Initialise();
+        CombatTracker.OnCombatEnd += OnCombatEnd;
 
 
         if (Service.ClientState.IsLoggedIn)
@@ -112,36 +110,12 @@ public sealed class Plugin : IDalamudPlugin
         Service.CommandManager.RemoveHandler(CommandName);
     }
 
-    // private void OnCommand(string command, string args)
-    // {
-    //     // in response to the slash command, just toggle the display status of our main ui
-    //     ToggleMainUI();
-    //
-    //     if (SteamAPI.IsSteamRunning())
-    //     {
-    //         unsafe
-    //         {
-    //             Steamworks.SteamTimeline.AddTimelineEvent("Test Description", "steam_attack", "Test Title 2", 1, -20f,
-    //                                                       5,
-    //                                                       ETimelineEventClipPriority
-    //                                                           .k_ETimelineEventClipPriority_Featured);
-    //         }
-    //     }
-    // }
-
     public void OnTimelineEvent(TimelineEventType eType)
     {
         switch (eType)
         {
             case TimelineEventType.CombatStart:
-                var ev = Service.Config.CombatStart;
-                if (ev.Enabled)
-                {
-                    AddTimelineItem(ev.TimelineIcon, ev.Name, "Combat Started", ev.Priority, 0, 0,
-                                    ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
-                    DutyTracker.Instance.StartNewPull();
-                }
-
+                DutyTracker.Instance.StartNewPull();
                 break;
             case TimelineEventType.PlayerUnconscious:
                 AddTimelineItem("steam_death", "Death", "You died", 1, 0, 0,
@@ -152,7 +126,7 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case TimelineEventType.DutyWipe:
                 float wipeSecondsPassed = (float)DutyTracker.Instance.EndPull();
-                
+                Service.ChatGui.Print($"Wipe pull which lasted: {wipeSecondsPassed}s");
                 AddTimelineItem("steam_invalid", "Wipe", "Full party wipe", 2, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
                 AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -wipeSecondsPassed,
@@ -161,6 +135,7 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             case TimelineEventType.DutyCompleted:
                 float secondsInThePastStart = (float)DutyTracker.Instance.EndPull();
+                Service.ChatGui.Print($"Completed pull which lasted: {secondsInThePastStart:.2}s");
                 AddTimelineItem("steam_checkmark", "Finish Duty", "Killed the boss", 2, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
                 AddTimelineItem("steam_bolt", "Pulled", "Pull start", 3, -secondsInThePastStart,
@@ -168,17 +143,17 @@ public sealed class Plugin : IDalamudPlugin
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_Featured);
                 break;
             case TimelineEventType.DutyEnd:
-                DutyTracker.Instance.EndDuty();
+                float dutyTotalElapsed = (float)DutyTracker.Instance.EndDuty();
                 AddTimelineItem("steam_minus", "End Duty", "End of duty", 1, 0, 0,
                                 ETimelineEventClipPriority.k_ETimelineEventClipPriority_None);
+                AddTimelineItem("steam_timer", "Duty Started", "Started a new duty", 2, -dutyTotalElapsed,
+                                dutyTotalElapsed, ETimelineEventClipPriority.k_ETimelineEventClipPriority_Standard);
                 break;
             case TimelineEventType.LoadingStart:
                 // SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_LoadingScreen);
                 break;
             case TimelineEventType.LoadingEnd:
                 // SteamTimeline.SetTimelineGameMode(ETimelineGameMode.k_ETimelineGameMode_Playing);
-                break;
-            default:
                 break;
         }
     }
@@ -187,6 +162,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         var newTerritory = Service.LuminaRow<TerritoryType>(typeId)?.PlaceName.Value
                                   ?.NameNoArticle.ToString();
+        
         SteamTimeline.SetTimelineStateDescription(newTerritory, 0);
 
         if (DutyTracker.Instance.CurrentDuty != 0)
@@ -220,6 +196,17 @@ public sealed class Plugin : IDalamudPlugin
                 break;
             default:
                 break;
+        }
+    }
+
+    private void OnCombatEnd(object? sender, TimeSpan elapsed)
+    {
+        var ev = Service.Config.CombatStart;
+        if (ev.Enabled)
+        {
+            AddTimelineItem(ev.TimelineIcon, ev.Name, "Combat Started", ev.Priority, (float)-elapsed.TotalSeconds,
+                            (float)elapsed.TotalSeconds,
+                            ETimelineEventClipPriority.k_ETimelineEventClipPriority_Standard);
         }
     }
 

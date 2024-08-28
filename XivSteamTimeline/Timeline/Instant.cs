@@ -15,7 +15,7 @@ public class Instant
 
     public TimeSpan Elapsed()
     {
-        return Start - DateTime.Now;
+        return DateTime.Now - Start;
     }
 
     public TimeSpan Refresh()

@@ -27,6 +27,7 @@ public class DutyTracker
 
     public void StartNewPull()
     {
+        Service.ChatGui.Print("Start new pull");
         PullStart = Instant.Now;
     }
 
